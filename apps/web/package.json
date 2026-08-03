@@ -1,0 +1,23 @@
+{
+  "name": "@kol/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@kol/content-runtime": "workspace:*",
+    "@kol/lexicon-runtime": "workspace:*",
+    "@kol/shared-types": "workspace:*",
+    "@kol/sim": "workspace:*",
+    "@kol/test-support": "workspace:*",
+    "phaser": "4.2.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3"
+  }
+}

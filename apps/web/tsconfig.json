@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "lib": ["ES2022", "DOM"],
+    "composite": true
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../../packages/shared-types" },
+    { "path": "../../packages/sim" },
+    { "path": "../../packages/content-runtime" },
+    { "path": "../../packages/lexicon-runtime" },
+    { "path": "../../packages/test-support" }
+  ]
+}

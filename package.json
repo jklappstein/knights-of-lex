@@ -1,0 +1,24 @@
+{
+  "name": "knights-of-lex",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "test:unit": "vitest run",
+    "dev": "pnpm --filter @kol/web dev",
+    "validate:focus": "node tools/run-validate.mjs focus",
+    "validate:agent-gates": "node tools/run-validate.mjs agent-gates",
+    "e2e": "playwright test --config e2e/playwright.config.ts",
+    "e2e:install": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

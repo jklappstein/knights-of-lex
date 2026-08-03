@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "composite": true
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../sim" },
+    { "path": "../content-runtime" },
+    { "path": "../lexicon-runtime" },
+    { "path": "../shared-types" }
+  ]
+}
