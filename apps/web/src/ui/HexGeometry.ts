@@ -68,6 +68,62 @@ export function hexVertices(radius: number): { x: number; y: number }[] {
   return verts;
 }
 
+/** Ray-casting point-in-polygon (local coords relative to hex center). */
+export function pointInPolygon(x: number, y: number, verts: readonly { x: number; y: number }[]): boolean {
+  let inside = false;
+  for (let i = 0, j = verts.length - 1; i < verts.length; j = i++) {
+    const vi = verts[i];
+    const vj = verts[j];
+    if (!vi || !vj) continue;
+    const intersect = (vi.y > y) !== (vj.y > y)
+      && x < ((vj.x - vi.x) * (y - vi.y)) / (vj.y - vi.y) + vi.x;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+export function containsPointInHex(
+  localX: number,
+  localY: number,
+  coord: HexCoord,
+): boolean {
+  const center = axialToPixel(coord.q, coord.r);
+  const verts = hexVertices(HEX_SIZE);
+  return pointInPolygon(localX - center.x, localY - center.y, verts);
+}
+
+/**
+ * Pick the tile under a screen pointer using hex geometry (not overlapping circles).
+ * Prefers the hex whose polygon contains the point; ties break toward nearest center.
+ */
+export function pickTileAt(
+  worldX: number,
+  worldY: number,
+  centerX: number,
+  centerY: number,
+  tileCoords: ReadonlyMap<string, HexCoord>,
+): HexCoord | null {
+  const localX = worldX - centerX;
+  const localY = worldY - centerY;
+
+  let best: HexCoord | null = null;
+  let bestDist = Infinity;
+
+  for (const coord of tileCoords.values()) {
+    if (!containsPointInHex(localX, localY, coord)) continue;
+    const pos = axialToPixel(coord.q, coord.r);
+    const dist = (localX - pos.x) ** 2 + (localY - pos.y) ** 2;
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = coord;
+    }
+  }
+
+  if (best) return best;
+
+  return findNearestTile(worldX, worldY, centerX, centerY, tileCoords);
+}
+
 export function findNearestTile(
   worldX: number,
   worldY: number,
@@ -118,6 +174,7 @@ export function findNeighborUnderPointer(
   for (const neighbor of getAxialNeighbors(lastCoord)) {
     const key = coordKey(neighbor);
     if (!tileCoords.has(key)) continue;
+    if (!containsPointInHex(localX, localY, neighbor)) continue;
 
     const pos = axialToPixel(neighbor.q, neighbor.r);
     const dx = localX - pos.x;

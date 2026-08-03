@@ -6,9 +6,9 @@ import {
   axialToPixel,
   buildTraceLetters,
   coordKey,
-  findNearestTile,
   findNeighborUnderPointer,
   hexVertices,
+  pickTileAt,
   type TracePreview,
 } from '../ui/HexGeometry.js';
 import { Layout, SymbolColors, SymbolGlyphs, UiTheme } from '../ui/UiTheme.js';
@@ -39,6 +39,7 @@ export class HeroBoardPresenter {
   private submitBtn: Phaser.GameObjects.Text | null = null;
   private clearBtn: Phaser.GameObjects.Text | null = null;
   private boardLabel: Phaser.GameObjects.Text | null = null;
+  private boardHitZone: Phaser.GameObjects.Zone | null = null;
 
   private letterMap = new Map<string, string>();
   private tileCoordMap = new Map<string, HexCoord>();
@@ -51,8 +52,14 @@ export class HeroBoardPresenter {
   private activeHeroId = '';
   private boardRevision = 0;
 
+  private pointerDownHandler = (pointer: Phaser.Input.Pointer): void => {
+    if (!this.boardHitZone) return;
+    this.isTracing = true;
+    this.handlePointerAt(pointer.worldX, pointer.worldY);
+  };
+
   private pointerMoveHandler = (pointer: Phaser.Input.Pointer): void => {
-    if (!this.isTracing) return;
+    if (!this.isTracing || !pointer.isDown) return;
     this.handlePointerAt(pointer.worldX, pointer.worldY);
   };
 
@@ -66,10 +73,6 @@ export class HeroBoardPresenter {
     this.previewPort = port;
   }
 
-  /**
-   * Only rebuilds tile visuals when board revision changes.
-   * Trace state is preserved across preview updates.
-   */
   renderBoard(
     board: BoardView,
     hero: HeroSnapshot,
@@ -151,34 +154,22 @@ export class HeroBoardPresenter {
       }).setOrigin(0.5);
 
       container.add([letter, symbol]);
-      container.setSize(HEX_SIZE * 2, HEX_SIZE * 2);
-      container.setInteractive(
-        new Phaser.Geom.Circle(0, 0, HEX_SIZE * 0.92),
-        Phaser.Geom.Circle.Contains,
-      );
 
-      const coord = tile.coord;
-      container.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-        this.isTracing = true;
-        if (this.tracePath.length === 0) {
-          this.handleTileSelect(coord);
-        } else {
-          const last = this.tracePath[this.tracePath.length - 1];
-          if (last && areAdjacent(last, coord)) {
-            this.handleTileSelect(coord);
-          }
-        }
-        pointer.event?.preventDefault();
+      this.tiles.push({
+        container,
+        hexGfx,
+        coord: tile.coord,
+        letter: tile.letter,
+        symbol: tile.combatSymbol,
       });
-
-      container.on('pointerover', (pointer: Phaser.Input.Pointer) => {
-        if (!this.isTracing || !pointer.isDown) return;
-        this.handlePointerAt(pointer.worldX, pointer.worldY);
-      });
-
-      this.tiles.push({ container, hexGfx, coord, letter: tile.letter, symbol: tile.combatSymbol });
       this.root.add(container);
     }
+
+    // Single hit zone — tile picked from pointer position, not overlapping circle targets.
+    const zoneH = HEX_SIZE * 7;
+    this.boardHitZone = this.scene.add.zone(this.boardCenterX, this.boardCenterY, width, zoneH);
+    this.boardHitZone.setInteractive({ useHandCursor: true });
+    this.boardHitZone.on('pointerdown', this.pointerDownHandler);
 
     this.submitBtn = this.scene.add.text(width / 2 - 60, Layout.actionBarY, 'Submit', {
       fontSize: '16px',
@@ -221,7 +212,7 @@ export class HeroBoardPresenter {
 
   private handlePointerAt(worldX: number, worldY: number): void {
     if (this.tracePath.length === 0) {
-      const coord = findNearestTile(worldX, worldY, this.boardCenterX, this.boardCenterY, this.tileCoordMap);
+      const coord = pickTileAt(worldX, worldY, this.boardCenterX, this.boardCenterY, this.tileCoordMap);
       if (coord) this.handleTileSelect(coord);
       return;
     }
@@ -358,6 +349,7 @@ export class HeroBoardPresenter {
   }
 
   clear(): void {
+    this.boardHitZone?.off('pointerdown', this.pointerDownHandler);
     this.scene.input.off('pointermove', this.pointerMoveHandler);
     this.scene.input.off('pointerup', this.pointerUpHandler);
     this.destroyBoardGraphics();
@@ -374,6 +366,8 @@ export class HeroBoardPresenter {
     this.traceLine = null;
     this.root?.destroy();
     this.root = null;
+    this.boardHitZone?.destroy();
+    this.boardHitZone = null;
     this.boardLabel?.destroy();
     this.boardLabel = null;
     this.wordPreviewText?.destroy();

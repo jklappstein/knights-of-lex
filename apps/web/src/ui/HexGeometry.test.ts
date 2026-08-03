@@ -3,9 +3,11 @@ import {
   HEX_SIZE,
   areAdjacent,
   axialToPixel,
+  containsPointInHex,
   findNeighborUnderPointer,
   getAxialNeighbors,
   neighborsAbove,
+  pickTileAt,
   pixelToAxial,
 } from './HexGeometry.js';
 
@@ -50,23 +52,21 @@ describe('HexGeometry pointy-top linking', () => {
     expect(areAdjacent({ q: 0, r: 0 }, { q: 2, r: 0 })).toBe(false);
   });
 
-  it('findNeighborUnderPointer only returns graph neighbors', () => {
+  it('pickTileAt selects hex under cursor, not overlapping neighbor below', () => {
     const tiles = new Map<string, { q: number; r: number }>();
-    for (const n of getAxialNeighbors({ q: 0, r: 0 })) {
-      tiles.set(`${n.q},${n.r}`, n);
-    }
     tiles.set('0,0', { q: 0, r: 0 });
+    tiles.set('0,1', { q: 0, r: 1 });
+    tiles.set('1,0', { q: 1, r: 0 });
 
-    const aboveLeft = axialToPixel(0, -1);
-    const picked = findNeighborUnderPointer(
-      aboveLeft.x,
-      aboveLeft.y,
-      0,
-      0,
-      { q: 0, r: 0 },
-      tiles,
-    );
+    const center = axialToPixel(0, 0);
+    // Point near top of center hex (where letter sits), not toward lower neighbor
+    const clickX = center.x;
+    const clickY = center.y - HEX_SIZE * 0.35;
 
-    expect(picked).toEqual({ q: 0, r: -1 });
+    expect(containsPointInHex(clickX, clickY, { q: 0, r: 0 })).toBe(true);
+    expect(containsPointInHex(clickX, clickY, { q: 0, r: 1 })).toBe(false);
+
+    const picked = pickTileAt(clickX, clickY, 0, 0, tiles);
+    expect(picked).toEqual({ q: 0, r: 0 });
   });
 });
