@@ -4,7 +4,13 @@ import type { RandomizedStartOptions } from '@kol/test-support';
 
 export interface GamePorts {
   readonly getView: () => RunView | null;
-  readonly dispatch: (command: GameCommand) => { ok: boolean; revision: number; facts: readonly GameFact[] };
+  readonly dispatch: (command: GameCommand) => {
+    ok: boolean;
+    revision: number;
+    code?: string;
+    message?: string;
+    facts: readonly GameFact[];
+  };
   readonly getFacts: () => readonly GameFact[];
 }
 
@@ -22,9 +28,18 @@ export function createGamePorts(service: GameService): GamePorts {
     getView: () => service.getView(),
     dispatch: (command) => {
       const outcome = service.dispatch(command);
+      if (outcome.result.ok) {
+        return {
+          ok: true,
+          revision: outcome.result.revision,
+          facts: outcome.facts,
+        };
+      }
       return {
-        ok: outcome.result.ok,
-        revision: outcome.result.ok ? outcome.result.revision : 0,
+        ok: false,
+        revision: 0,
+        code: outcome.result.code,
+        message: outcome.result.message,
         facts: outcome.facts,
       };
     },

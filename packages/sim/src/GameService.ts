@@ -18,6 +18,8 @@ import {
   type RunRuntimeState,
 } from './run/RunState.js';
 import { RngStreamRegistry } from './rng/StrictRng.js';
+import { evaluateWord } from './word/WordEvaluator.js';
+import type { HexCoord, WordEvaluation } from '@kol/shared-types';
 
 export interface GameServices {
   readonly catalog: GameContentCatalog;
@@ -37,6 +39,30 @@ export class GameService {
 
   getFacts(): readonly GameFact[] {
     return this.factLog;
+  }
+
+  previewWord(
+    heroId: string,
+    path: readonly HexCoord[],
+    boardRevision: number,
+  ): WordEvaluation | { rejected: true; code: string } | null {
+    const battle = this.state?.battle;
+    if (!battle) return null;
+
+    const hero = battle.heroes.find((h) => h.heroId === heroId);
+    if (!hero) return null;
+
+    return evaluateWord(
+      this.services.catalog,
+      this.services.lexicon,
+      hero.board,
+      path,
+      boardRevision,
+      hero.symbols,
+      hero.triadRecipeId,
+      hero.skillModifiers,
+      battle.usedWords,
+    );
   }
 
   dispatch(command: GameCommand): CommandOutcome {
