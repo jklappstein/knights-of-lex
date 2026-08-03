@@ -1,12 +1,13 @@
 import Phaser from 'phaser';
 import type { BoardView, HeroSnapshot, HexCoord } from '@kol/shared-types';
 import {
-  HEX_RADIUS,
+  HEX_SIZE,
   areAdjacent,
   axialToPixel,
   buildTraceLetters,
   coordKey,
   findNearestTile,
+  findNeighborUnderPointer,
   hexVertices,
   type TracePreview,
 } from '../ui/HexGeometry.js';
@@ -150,17 +151,29 @@ export class HeroBoardPresenter {
       }).setOrigin(0.5);
 
       container.add([letter, symbol]);
-      container.setSize(HEX_RADIUS * 2, HEX_RADIUS * 2);
+      container.setSize(HEX_SIZE * 2, HEX_SIZE * 2);
       container.setInteractive(
-        new Phaser.Geom.Circle(0, 0, HEX_RADIUS * 0.92),
+        new Phaser.Geom.Circle(0, 0, HEX_SIZE * 0.92),
         Phaser.Geom.Circle.Contains,
       );
 
       const coord = tile.coord;
       container.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
         this.isTracing = true;
-        this.handleTileSelect(coord);
+        if (this.tracePath.length === 0) {
+          this.handleTileSelect(coord);
+        } else {
+          const last = this.tracePath[this.tracePath.length - 1];
+          if (last && areAdjacent(last, coord)) {
+            this.handleTileSelect(coord);
+          }
+        }
         pointer.event?.preventDefault();
+      });
+
+      container.on('pointerover', (pointer: Phaser.Input.Pointer) => {
+        if (!this.isTracing || !pointer.isDown) return;
+        this.handlePointerAt(pointer.worldX, pointer.worldY);
       });
 
       this.tiles.push({ container, hexGfx, coord, letter: tile.letter, symbol: tile.combatSymbol });
@@ -191,7 +204,7 @@ export class HeroBoardPresenter {
   }
 
   private drawHex(gfx: Phaser.GameObjects.Graphics, strokeColor: number, fillColor: number, fillAlpha = 0.95): void {
-    const verts = hexVertices(HEX_RADIUS - 1);
+    const verts = hexVertices(HEX_SIZE);
     gfx.clear();
     gfx.fillStyle(fillColor, fillAlpha);
     gfx.lineStyle(2, strokeColor, 1);
@@ -207,7 +220,23 @@ export class HeroBoardPresenter {
   }
 
   private handlePointerAt(worldX: number, worldY: number): void {
-    const coord = findNearestTile(worldX, worldY, this.boardCenterX, this.boardCenterY, this.tileCoordMap);
+    if (this.tracePath.length === 0) {
+      const coord = findNearestTile(worldX, worldY, this.boardCenterX, this.boardCenterY, this.tileCoordMap);
+      if (coord) this.handleTileSelect(coord);
+      return;
+    }
+
+    const last = this.tracePath[this.tracePath.length - 1];
+    if (!last) return;
+
+    const coord = findNeighborUnderPointer(
+      worldX,
+      worldY,
+      this.boardCenterX,
+      this.boardCenterY,
+      last,
+      this.tileCoordMap,
+    );
     if (coord) this.handleTileSelect(coord);
   }
 

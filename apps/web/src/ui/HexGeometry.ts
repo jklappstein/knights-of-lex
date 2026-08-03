@@ -1,15 +1,32 @@
 import type { HexCoord } from '@kol/shared-types';
-export const HEX_RADIUS = 26;
+
+/**
+ * Pointy-top hex layout (Red Blob Games axial).
+ * `HEX_SIZE` is edge length, which equals circumradius for a regular hexagon.
+ */
+export const HEX_SIZE = 26;
+
+const SQRT3 = Math.sqrt(3);
+
+/** Axial directions — each hex links to exactly these 6 neighbors. */
+export const AXIAL_NEIGHBOR_DELTAS: readonly HexCoord[] = [
+  { q: 1, r: 0 },
+  { q: 1, r: -1 },
+  { q: 0, r: -1 },
+  { q: -1, r: 0 },
+  { q: -1, r: 1 },
+  { q: 0, r: 1 },
+];
 
 export function axialToPixel(q: number, r: number): { x: number; y: number } {
-  const x = HEX_RADIUS * (3 / 2) * q;
-  const y = HEX_RADIUS * (Math.sqrt(3) / 2 * q + Math.sqrt(3) * r);
+  const x = HEX_SIZE * (SQRT3 * q + (SQRT3 / 2) * r);
+  const y = HEX_SIZE * ((3 / 2) * r);
   return { x, y };
 }
 
 export function pixelToAxial(x: number, y: number): HexCoord {
-  const q = ((2 / 3) * x) / HEX_RADIUS;
-  const r = ((-1 / 3) * x + (Math.sqrt(3) / 3) * y) / HEX_RADIUS;
+  const q = ((SQRT3 / 3) * x - (1 / 3) * y) / HEX_SIZE;
+  const r = ((2 / 3) * y) / HEX_SIZE;
   return axialRound(q, r);
 }
 
@@ -30,6 +47,10 @@ export function coordKey(coord: HexCoord): string {
   return `${coord.q},${coord.r}`;
 }
 
+export function getAxialNeighbors(coord: HexCoord): readonly HexCoord[] {
+  return AXIAL_NEIGHBOR_DELTAS.map((d) => ({ q: coord.q + d.q, r: coord.r + d.r }));
+}
+
 export function areAdjacent(a: HexCoord, b: HexCoord): boolean {
   const dq = Math.abs(a.q - b.q);
   const dr = Math.abs(a.r - b.r);
@@ -37,7 +58,7 @@ export function areAdjacent(a: HexCoord, b: HexCoord): boolean {
   return dq <= 1 && dr <= 1 && ds <= 1 && !(dq === 0 && dr === 0);
 }
 
-/** Vertices for a pointy-top hex centered at origin. */
+/** Vertices for a pointy-top hex centered at origin (tip at top). */
 export function hexVertices(radius: number): { x: number; y: number }[] {
   const verts: { x: number; y: number }[] = [];
   for (let i = 0; i < 6; i++) {
@@ -68,12 +89,48 @@ export function findNearestTile(
     const dx = localX - pos.x;
     const dy = localY - pos.y;
     const dist = dx * dx + dy * dy;
-    if (dist < bestDist && dist < HEX_RADIUS * HEX_RADIUS * 1.2) {
+    if (dist < bestDist && dist < HEX_SIZE * HEX_SIZE * 1.4) {
       bestDist = dist;
       best = coord;
     }
   }
   return best;
+}
+
+/**
+ * When dragging a trace, only accept one of the 6 graph-neighbors of the last tile.
+ * This ensures the hex above links via upper-left OR upper-right, not a disconnected jump.
+ */
+export function findNeighborUnderPointer(
+  worldX: number,
+  worldY: number,
+  centerX: number,
+  centerY: number,
+  lastCoord: HexCoord,
+  tileCoords: ReadonlyMap<string, HexCoord>,
+): HexCoord | null {
+  const localX = worldX - centerX;
+  const localY = worldY - centerY;
+
+  let best: HexCoord | null = null;
+  let bestDist = Infinity;
+
+  for (const neighbor of getAxialNeighbors(lastCoord)) {
+    const key = coordKey(neighbor);
+    if (!tileCoords.has(key)) continue;
+
+    const pos = axialToPixel(neighbor.q, neighbor.r);
+    const dx = localX - pos.x;
+    const dy = localY - pos.y;
+    const dist = dx * dx + dy * dy;
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = neighbor;
+    }
+  }
+
+  const pickRadius = HEX_SIZE * HEX_SIZE * 1.6;
+  return bestDist < pickRadius ? best : null;
 }
 
 export interface TracePreview {
@@ -88,4 +145,13 @@ export function buildTraceLetters(
   letterMap: ReadonlyMap<string, string>,
 ): string {
   return path.map((c) => letterMap.get(coordKey(c)) ?? '').join('');
+}
+
+/** Neighbors visually above a coord (for pointy-top layout). */
+export function neighborsAbove(coord: HexCoord): readonly HexCoord[] {
+  return getAxialNeighbors(coord).filter((n) => {
+    const pos = axialToPixel(n.q, n.r);
+    const center = axialToPixel(coord.q, coord.r);
+    return pos.y < center.y - 0.01;
+  });
 }
