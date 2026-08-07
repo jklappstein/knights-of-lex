@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "forge.profile.v1",
+  "profileKey": "knights-of-lex.audio.v1",
+  "profileVersion": "knights-of-lex.audio.v1",
+  "aesthetic": {
+    "constitution": "Cozy fantasy RPG audio — crisp transients, warm tone",
+    "positiveFragments": [
+      "short loops",
+      "muted UI sounds",
+      "orchestral warmth"
+    ],
+    "negativeFragments": [
+      "harsh highs",
+      "long reverb tails"
+    ]
+  },
+  "providerDefaults": {},
+  "matteProfile": {},
+  "qaThresholds": {}
+}

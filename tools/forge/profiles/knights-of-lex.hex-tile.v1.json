@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "forge.profile.v1",
+  "profileKey": "knights-of-lex.hex-tile.v1",
+  "profileVersion": "knights-of-lex.hex-tile.v1",
+  "aesthetic": {
+    "constitution": "Hexagonal board tile, symbol-tinted, readable letter area",
+    "positiveFragments": [
+      "cozy SNES fantasy",
+      "crisp icon readability",
+      "limited palette"
+    ],
+    "negativeFragments": [
+      "photorealism",
+      "busy backgrounds",
+      "modern UI chrome"
+    ]
+  },
+  "providerDefaults": {},
+  "matteProfile": {
+    "enabled": true,
+    "version": "v9",
+    "keyColor": "#ff00ff",
+    "processMode": "recommended",
+    "fuzz": 8
+  },
+  "qaThresholds": {
+    "minOccupancy": 0.04
+  }
+}

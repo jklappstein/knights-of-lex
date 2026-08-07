@@ -1,0 +1,31 @@
+schemaVersion: forge.project.v1
+projectId: knights-of-lex
+displayName: Knights of Lex
+adapter:
+  protocolVersion: 1
+  entrypoint: tools/forge/adapter
+repository:
+  allowedWriteRoots:
+    - content/images
+    - content/sounds
+    - content/music
+  dirtyTreePolicy: reject-conflicting
+profiles:
+  default: knights-of-lex.item-icon.v1
+  hero: knights-of-lex.hero-portrait.v1
+  enemy: knights-of-lex.enemy-portrait.v1
+  ui-surface: knights-of-lex.ui-surface.v1
+  ui-button: knights-of-lex.ui-button.v1
+  ui-icon: knights-of-lex.ui-icon.v1
+  hex-tile: knights-of-lex.hex-tile.v1
+  brand-logo: knights-of-lex.brand-logo.v1
+  audio: knights-of-lex.audio.v1
+capabilities:
+  runtimePreview: true
+  threeD: false
+  audio: true
+validation:
+  commands:
+    - pnpm validate:focus
+promotion:
+  defaultMode: write-only

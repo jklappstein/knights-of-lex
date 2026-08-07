@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "forge.profile.v1",
+  "profileKey": "knights-of-lex.item-icon.v1",
+  "profileVersion": "knights-of-lex.item-icon.v1",
+  "aesthetic": {
+    "constitution": "Single centered item icon, soft rim light, board-scale readability",
+    "positiveFragments": [
+      "cozy SNES fantasy",
+      "crisp icon readability",
+      "limited palette"
+    ],
+    "negativeFragments": [
+      "photorealism",
+      "busy backgrounds",
+      "modern UI chrome"
+    ]
+  },
+  "providerDefaults": {},
+  "matteProfile": {
+    "enabled": true,
+    "version": "v9",
+    "keyColor": "#ff00ff",
+    "processMode": "recommended",
+    "fuzz": 8
+  },
+  "qaThresholds": {
+    "minOccupancy": 0.04
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "forge.profile.v1",
+  "profileKey": "knights-of-lex.ui-surface.v1",
+  "profileVersion": "knights-of-lex.ui-surface.v1",
+  "aesthetic": {
+    "constitution": "Full-bleed scene backdrop, edge-to-edge fill, atmospheric, no UI chrome",
+    "positiveFragments": [
+      "cozy SNES fantasy",
+      "crisp icon readability",
+      "limited palette"
+    ],
+    "negativeFragments": [
+      "photorealism",
+      "busy backgrounds",
+      "modern UI chrome"
+    ]
+  },
+  "providerDefaults": {},
+  "matteProfile": {
+    "enabled": false,
+    "mode": "disabled"
+  },
+  "qaThresholds": {
+    "minOccupancy": 0.04,
+    "allowOpaqueFullFrame": true,
+    "minTransparentRatio": 0
+  }
+}

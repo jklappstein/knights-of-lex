@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "forge.profile.v1",
+  "profileKey": "knights-of-lex.enemy-portrait.v1",
+  "profileVersion": "knights-of-lex.enemy-portrait.v1",
+  "aesthetic": {
+    "constitution": "Enemy portrait bust, threatening readable silhouette",
+    "positiveFragments": [
+      "cozy SNES fantasy",
+      "crisp icon readability",
+      "limited palette"
+    ],
+    "negativeFragments": [
+      "photorealism",
+      "busy backgrounds",
+      "modern UI chrome"
+    ]
+  },
+  "providerDefaults": {},
+  "matteProfile": {
+    "enabled": true,
+    "version": "v9",
+    "keyColor": "#ff00ff",
+    "processMode": "recommended",
+    "fuzz": 8
+  },
+  "qaThresholds": {
+    "minOccupancy": 0.04
+  }
+}
